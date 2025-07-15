@@ -49,7 +49,7 @@ def get_last_id():
     return my_posts[-1].get("id", 0)
 
 
-def find_post_by_id(id):
+def find_post_by_id(id: int):
     for post in my_posts:
         if post["id"] == id:
             return post
@@ -71,11 +71,9 @@ def test_posts(db: Session = Depends(get_db)):
 
 
 @app.get("/posts")
-def get_posts():
-    cursor.execute("""SELECT *
-                      FROM posts""")
-    posts = cursor.fetchall()
-    return {"data": posts}
+def get_posts(db: Session = Depends(get_db)):
+    posts = db.query(models.Post).all()
+    return posts
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
