@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP
 from sqlalchemy.sql import text
 
@@ -12,4 +14,13 @@ class Post(Base):
     content: str = Column(String, index=True, nullable=False)
     is_published: bool = Column(Boolean, server_default='TRUE', nullable=False)
     rating: int = Column(Integer, default=0, nullable=True)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
+    created_at: datetime = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: int = Column(Integer, primary_key=True, index=True)
+    email: str = Column(String, nullable=False, unique=True)
+    password: str = Column(String, nullable=False)
+    create_at: datetime = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)

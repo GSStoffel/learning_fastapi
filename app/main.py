@@ -30,7 +30,6 @@ except Exception as error:
     print("Error: ", error)
 
 
-
 @app.get("/")
 def root():
     return {"message": "Hello World"}
@@ -101,3 +100,12 @@ def get_post(id: int, db: Session = Depends(get_db)):
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post {id} not found")
     return post
+
+
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponse)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    new_user = models.User(**user.model_dump())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
