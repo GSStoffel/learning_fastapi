@@ -4,14 +4,12 @@ from typing import List
 import psycopg2
 from fastapi import FastAPI, HTTPException, Response, status
 from fastapi.params import Depends
-from passlib.context import CryptContext
 from psycopg2.extras import RealDictCursor
 from sqlalchemy.orm import Session
 
-from app import models, schemas
+from app import models, schemas, utils
 from app.database import engine, get_db
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -106,7 +104,7 @@ def get_post(id: int, db: Session = Depends(get_db)):
 
 @app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponse)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    hash_password = pwd_context.hash(user.password)
+    hash_password = utils.hash(user.password)
     user.password = hash_password
 
     new_user = models.User(**user.model_dump())
