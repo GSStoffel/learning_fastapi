@@ -92,28 +92,25 @@ def get_latest_post():
 
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post):
-    cursor.execute("""UPDATE posts
-                      SET title        = %s,
-                          content      = %s,
-                          is_published = %s,
-                          rating       = %s
-                      WHERE id = %s RETURNING *""",
-                   (post.title, post.content, post.is_published, post.rating, str(id),))
-    post = cursor.fetchone()
-    conn.commit()
+def update_post(id: int, post: Post, db: Session = Depends(get_db)):
+    post_query = db.query(models.Post).filter(models.Post.id == id)
 
-    if post is None:
+    if post_query.first() is None:
         raise HTTPException(status_code=404, detail="post not found")
-    return post
+
+    post_query.update(post.model_dump(), synchronize_session=False)
+    db.commit()
+    return post_query.first()
 
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db)):
-    post = db.query(models.Post).filter(models.Post.id == id)
-    if not post.first():
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+
+    if not post_query.first():
         raise HTTPException(status_code=404, detail="post not found")
-    post.delete()
+
+    post_query.delete(synchronize_session=False)
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
