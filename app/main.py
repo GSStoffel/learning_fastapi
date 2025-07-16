@@ -1,27 +1,17 @@
 from http.client import HTTPException
-from typing import Optional
 
 import psycopg2
 from fastapi import FastAPI, HTTPException, Response, status
 from fastapi.params import Depends
 from psycopg2.extras import RealDictCursor
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app import models
+from app import models, schemas
 from app.database import engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
-
-class Post(BaseModel):
-    title: str
-    content: str
-    is_published: bool = True
-    rating: Optional[int] = None
-
 
 my_posts = [
     {"title": "title of post 1", "content": "content of the post 1", "id": 1},
@@ -77,7 +67,7 @@ def get_posts(db: Session = Depends(get_db)):
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post, db: Session = Depends(get_db)):
+def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     new_post = models.Post(**post.model_dump())
     db.add(new_post)
     db.commit()
@@ -92,7 +82,7 @@ def get_latest_post():
 
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post, db: Session = Depends(get_db)):
+def update_post(id: int, post: schemas.PostUpdate, db: Session = Depends(get_db)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
 
     if post_query.first() is None:
