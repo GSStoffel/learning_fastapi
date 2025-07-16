@@ -124,11 +124,8 @@ def delete_post(id: int):
 
 
 @app.get("/posts/{id}")
-def get_post(id: int):
-    cursor.execute("""SELECT *
-                      FROM posts
-                      WHERE id = %s""", (str(id),))
-    post = cursor.fetchone()
+def get_post(id: int, db: Session = Depends(get_db)):
+    post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code=404, detail=f"post {id} not found")
     return post
