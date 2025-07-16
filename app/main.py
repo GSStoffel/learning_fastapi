@@ -78,7 +78,6 @@ def get_posts(db: Session = Depends(get_db)):
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_post(post: Post, db: Session = Depends(get_db)):
-
     new_post = models.Post(**post.model_dump())
     db.add(new_post)
     db.commit()
@@ -110,15 +109,12 @@ def update_post(id: int, post: Post):
 
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
-    cursor.execute("""DELETE
-                      FROM posts
-                      WHERE id = %s RETURNING *""", (str(id),))
-    post = cursor.fetchone()
-    conn.commit()
-
-    if not post:
+def delete_post(id: int, db: Session = Depends(get_db)):
+    post = db.query(models.Post).filter(models.Post.id == id)
+    if not post.first():
         raise HTTPException(status_code=404, detail="post not found")
+    post.delete()
+    db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
