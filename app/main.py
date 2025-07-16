@@ -14,11 +14,6 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-my_posts = [
-    {"title": "title of post 1", "content": "content of the post 1", "id": 1},
-    {"title": "title of post 2", "content": "content of the post 2", "id": 2},
-]
-
 try:
     conn = psycopg2.connect(
         host='localhost',
@@ -34,16 +29,6 @@ except Exception as error:
     print("Connection to PostgreSQL failed")
     print("Error: ", error)
 
-
-def get_last_id():
-    return my_posts[-1].get("id", 0)
-
-
-def find_post_by_id(id: int):
-    for post in my_posts:
-        if post["id"] == id:
-            return post
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
 
 
 @app.get("/")
@@ -77,9 +62,12 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     return new_post
 
 
-@app.get("/posts/latest")
-def get_latest_post():
-    return my_posts[-1]
+@app.get("/posts/latest", response_model=schemas.PostResponse)
+def get_latest_post(db: Session = Depends(get_db)):
+    post = db.query(models.Post).order_by(models.Post.created_at.desc()).first()
+    if not post:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return post
 
 
 @app.put("/posts/{id}", response_model=schemas.PostResponse)
