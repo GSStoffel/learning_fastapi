@@ -2,12 +2,11 @@ from http.client import HTTPException
 from typing import Optional
 
 import psycopg2
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, status
 from fastapi.params import Depends
 from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from starlette import status
 
 from app import models
 from app.database import engine, get_db
@@ -53,7 +52,7 @@ def find_post_by_id(id: int):
     for post in my_posts:
         if post["id"] == id:
             return post
-    raise HTTPException(status_code=404, detail="post not found")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
 
 
 @app.get("/")
@@ -67,7 +66,8 @@ def test_posts(db: Session = Depends(get_db)):
         posts = db.query(models.Post).all()
         return posts
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"SQLAlchemy connection failed: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"SQLAlchemy connection failed: {e}")
 
 
 @app.get("/posts")
@@ -96,7 +96,7 @@ def update_post(id: int, post: Post, db: Session = Depends(get_db)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
 
     if post_query.first() is None:
-        raise HTTPException(status_code=404, detail="post not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
 
     post_query.update(post.model_dump(), synchronize_session=False)
     db.commit()
@@ -108,7 +108,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
 
     if not post_query.first():
-        raise HTTPException(status_code=404, detail="post not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
 
     post_query.delete(synchronize_session=False)
     db.commit()
@@ -120,5 +120,5 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 def get_post(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
-        raise HTTPException(status_code=404, detail=f"post {id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post {id} not found")
     return post
