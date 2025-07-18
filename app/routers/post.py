@@ -21,7 +21,8 @@ def get_posts(db: Session = Depends(get_db), current_user: UserResponse = Depend
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
-def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)):
+def create_post(post: schemas.PostCreate, db: Session = Depends(get_db),
+                current_user: UserResponse = Depends(get_current_user)):
     new_post = models.Post(owner_id=current_user.id, **post.model_dump())
     db.add(new_post)
     db.commit()
@@ -54,9 +55,13 @@ def update_post(id: int, post: schemas.PostUpdate, db: Session = Depends(get_db)
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
 
-    if not post_query.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post {id} não encontrado")
+
+    if post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Não autorizado para realizar essa ação")
 
     post_query.delete(synchronize_session=False)
     db.commit()
