@@ -31,6 +31,16 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db),
     return new_post
 
 
+@router.get("/my_posts", response_model=List[schemas.PostResponse])
+def get_my_posts(db: Session = Depends(get_db), current_user: schemas.UserResponse = Depends(get_current_user)):
+    posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
+
+    if not posts:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    return posts
+
+
 @router.get("/latest", response_model=schemas.PostResponse)
 def get_latest_post(db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)):
     post = db.query(models.Post).order_by(models.Post.created_at.desc()).first()
