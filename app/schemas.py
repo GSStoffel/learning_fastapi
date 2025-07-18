@@ -4,30 +4,6 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 
-class PostBase(BaseModel):
-    title: str
-    content: str
-    is_published: bool = True
-    rating: Optional[int] = None
-
-
-class PostCreate(PostBase):
-    pass
-
-
-class PostUpdate(PostBase):
-    pass
-
-
-class PostResponse(PostBase):
-    id: int
-    created_at: datetime
-    owner_id: int
-
-    class Config:
-        from_attributes = True
-
-
 class UserBase(BaseModel):
     email: EmailStr
 
@@ -46,6 +22,30 @@ class UserResponse(UserBase):
 
 class UserLogin(UserBase):
     password: str
+
+
+class PostBase(BaseModel):
+    title: str
+    content: str
+    is_published: bool = True
+    rating: Optional[int] = None
+
+
+class PostCreate(PostBase):
+    pass
+
+
+class PostUpdate(PostBase):
+    pass
+
+
+class PostResponse(PostBase):
+    id: int
+    created_at: datetime
+    owner: UserResponse
+
+    class Config:
+        from_attributes = True
 
 
 class Token(BaseModel):
