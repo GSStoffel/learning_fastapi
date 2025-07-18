@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP
+from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, ForeignKey
 from sqlalchemy.sql import text
 
 from app.database import Base
@@ -15,6 +15,7 @@ class Post(Base):
     is_published: bool = Column(Boolean, server_default='TRUE', nullable=False)
     rating: int = Column(Integer, default=0, nullable=True)
     created_at: datetime = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
 
 class User(Base):
