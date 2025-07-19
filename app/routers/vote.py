@@ -14,10 +14,10 @@ router = APIRouter(
 
 @router.post("", status_code=status.HTTP_200_OK)
 def vote(vote: VoteBase, db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)):
-    post = db.query(models.Post).filter(models.Post.id == vote.post_id)
+    post = db.query(models.Post).filter(models.Post.id == vote.post_id).first()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post {id} não encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post {vote.post_id} não encontrado")
 
     existing_vote = db.query(models.Vote).filter(models.Vote.post_id == vote.post_id,
                                                  models.Vote.user_id == current_user.id).first()
