@@ -48,6 +48,10 @@ class PostResponse(PostBase):
         from_attributes = True
 
 
+class VoteBase(BaseModel):
+    post_id: int
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
