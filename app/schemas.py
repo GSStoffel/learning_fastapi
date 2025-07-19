@@ -48,6 +48,14 @@ class PostResponse(PostBase):
         from_attributes = True
 
 
+class PostVoteResponse(BaseModel):
+    Post: PostResponse
+    votes: int
+
+    class Config:
+        from_attributes = True
+
+
 class VoteBase(BaseModel):
     post_id: int
 

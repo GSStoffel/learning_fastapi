@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from fastapi import Depends, HTTPException, status, Response, APIRouter
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app import schemas, models
@@ -14,14 +15,24 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=List[schemas.PostResponse])
+@router.get("", response_model=List[schemas.PostVoteResponse])
 def get_posts(
         db: Session = Depends(get_db),
         current_user: UserResponse = Depends(get_current_user),
         limit: Optional[int] = None,
         skip: Optional[int] = None,
         search: Optional[str] = ""):
-    query = db.query(models.Post).filter(models.Post.title.contains(search))
+    query = (
+        db.query(
+            models.Post,
+            func.count(models.Vote.post_id).label("votes")
+        )
+        .join(models.Vote, models.Post.id == models.Vote.post_id, isouter=True)
+        .group_by(models.Post.id)
+    )
+
+    if search:
+        query = query.filter(models.Post.title.contains(search))
 
     if limit:
         query = query.limit(limit)
