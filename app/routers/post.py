@@ -44,9 +44,17 @@ def get_posts(
     return posts
 
 
-@router.get("/my_posts", response_model=List[schemas.PostResponse])
+@router.get("/my_posts", response_model=List[schemas.PostVoteResponse])
 def get_my_posts(db: Session = Depends(get_db), current_user: schemas.UserResponse = Depends(get_current_user)):
-    posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
+    query = (
+        db.query(
+            models.Post,
+            func.count(models.Vote.post_id).label("votes")
+        )
+        .join(models.Vote, models.Post.id == models.Vote.post_id, isouter=True)
+        .group_by(models.Post.id)
+    )
+    posts = query.filter(models.Post.owner_id == current_user.id).all()
 
     if not posts:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -54,17 +62,35 @@ def get_my_posts(db: Session = Depends(get_db), current_user: schemas.UserRespon
     return posts
 
 
-@router.get("/latest", response_model=schemas.PostResponse)
+@router.get("/latest", response_model=schemas.PostVoteResponse)
 def get_latest_post(db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)):
-    post = db.query(models.Post).order_by(models.Post.created_at.desc()).first()
+    query = (
+        db.query(
+            models.Post,
+            func.count(models.Vote.post_id).label("votes")
+        )
+        .join(models.Vote, models.Post.id == models.Vote.post_id, isouter=True)
+        .group_by(models.Post.id)
+    )
+    post = query.order_by(models.Post.created_at.desc()).first()
+
     if not post:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
+
     return post
 
 
-@router.get("/{id}", response_model=schemas.PostResponse)
+@router.get("/{id}", response_model=schemas.PostVoteResponse)
 def get_post(id: int, db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)):
-    post = db.query(models.Post).filter(models.Post.id == id).first()
+    query = (
+        db.query(
+            models.Post,
+            func.count(models.Vote.post_id).label("votes")
+        )
+        .join(models.Vote, models.Post.id == models.Vote.post_id, isouter=True)
+        .group_by(models.Post.id)
+    )
+    post = query.filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post {id} not found")
     return post
