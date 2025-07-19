@@ -43,6 +43,8 @@ curl -X POST "http://localhost:8000/login" -d "username=seu_email&password=sua_s
 
 ## Endpoints principais
 
+A documentação dos métodos pode ser encontrada em http://localhost:8000/docs
+
 - `POST /users` — Cria um novo usuário
 - `GET /users/{id}` — Busca usuário por ID
 - `POST /login` — Autentica e retorna um token JWT
@@ -52,6 +54,7 @@ curl -X POST "http://localhost:8000/login" -d "username=seu_email&password=sua_s
 - `GET /posts/{id}` — Busca post por ID (requer autenticação)
 - `PUT /posts/{id}` — Atualiza post (apenas dono)
 - `DELETE /posts/{id}` — Remove post (apenas dono)
+- `POST /vote` — Adicionar/Remover voto de um post
 
 ## Licença
 
